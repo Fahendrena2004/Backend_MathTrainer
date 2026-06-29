@@ -1,0 +1,225 @@
+openapi: 3.0.1
+info:
+  title: MathTrainer API (partial)
+  version: '0.1.0'
+  description: Minimal OpenAPI spec stub for local development.
+servers:
+  - url: http://localhost:8000/api
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+        '401':
+          description: Unauthorized
+  /topics:
+    get:
+      summary: List topics
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
+
+  /users:
+    get:
+      summary: List users
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /attempts:
+    get:
+      summary: List all attempts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attempt'
+    post:
+      summary: Submit a new attempt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                exercise_id:
+                  type: integer
+                learning_session_id:
+                  type: integer
+                  nullable: true
+                answer:
+                  type: string
+                time_spent:
+                  type: integer
+                  nullable: true
+                file_url:
+                  type: string
+                  nullable: true
+              required:
+                - user_id
+                - exercise_id
+                - answer
+      responses:
+        '201':
+          description: Attempt created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+        '422':
+          description: Validation error or business rule violation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        school_level_id:
+          type: integer
+
+    SchoolLevel:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        display_order:
+          type: integer
+        description:
+          type: string
+
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        is_active:
+          type: boolean
+
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: integer
+        topic_id:
+          type: integer
+        school_level_id:
+          type: integer
+        title:
+          type: string
+        statement:
+          type: string
+        exercise_type:
+          type: string
+        expected_answer:
+          type: string
+        correction:
+          type: string
+        points_max:
+          type: integer
+
+    LearningSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+
+    Attempt:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        exercise_id:
+          type: integer
+        learning_session_id:
+          type: integer
+          nullable: true
+        answer:
+          type: string
+        score:
+          type: integer
+        success:
+          type: boolean
+        time_spent:
+          type: integer
+          nullable: true
+        file_url:
+          type: string
+          nullable: true
+        exercise:
+          $ref: '#/components/schemas/Exercise'
+
+    Badge:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
