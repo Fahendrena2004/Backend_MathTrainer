@@ -15,7 +15,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', HealthController::class);
 
 Route::post('/auth/register', [AuthController::class, 'register']);
-// GET /auth/login route removed – Laravel automatically returns 405 for unsupported methods
+// Return a clear JSON 405 for browser GETs to the login endpoint
+use Illuminate\Http\Request;
+Route::get('/auth/login', function (Request $request) {
+    return response()->json([
+        'error' => 'Method Not Allowed. Use POST to authenticate.'
+    ], 405, ['Allow' => 'POST']);
+});
 Route::post('/auth/admin-login', [AuthController::class, 'adminLogin']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 

@@ -30,6 +30,26 @@ class AuthController extends Controller
         ]);
     }
 
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        $user = User::query()->where('email', $validated['email'])->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur introuvable'], 404);
+        }
+
+        $user->update([
+            'password_hash' => Hash::make($validated['password']),
+        ]);
+
+        return response()->json(['message' => 'Mot de passe mis à jour avec succès']);
+    }
+
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -37,16 +57,21 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! $token = auth('api')->attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
+        /** @var \PHPOpenSourceSaver\JWTAuth\JWTGuard $guard */
+        $guard = auth('api');
+
+        if (! $token = $guard->attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-                $user = auth('api')->user();
+        /** @var User $user */
+        $user = $guard->user();
+
         return response()->json([
             'user' => $user->load('schoolLevel'),
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'expires_in' => $guard->factory()->getTTL() * 60,
         ]);
     }
 
@@ -74,14 +99,17 @@ class AuthController extends Controller
             'role' => 'student', // force student role
         ]);
 
+        /** @var \PHPOpenSourceSaver\JWTAuth\JWTGuard $guard */
+        $guard = auth('api');
+
         // Generate JWT token for the newly created user
-        $token = auth('api')->login($user);
+        $token = $guard->login($user);
 
         return response()->json([
             'data' => $user->load('schoolLevel'),
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'expires_in' => $guard->factory()->getTTL() * 60,
         ], 201);
     }
 }
